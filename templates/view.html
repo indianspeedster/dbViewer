@@ -4,67 +4,119 @@
   <meta charset="UTF-8">
   <title>Table: {{ table }}</title>
   <style>
+    :root {
+      --bg: #f5f7fa;
+      --fg: #2c3e50;
+      --table-bg: white;
+      --row-alt: #f2f2f2;
+      --row-hover: #e0f0ff;
+      --header-bg: #3498db;
+      --header-fg: white;
+      --accent: #2ecc71;
+    }
+
+    body.dark {
+      --bg: #1e1e2f;
+      --fg: #f5f5f5;
+      --table-bg: #2e2e3e;
+      --row-alt: #3a3a4a;
+      --row-hover: #404052;
+      --header-bg: #2c3e50;
+      --header-fg: #f5f5f5;
+      --accent: #27ae60;
+    }
+
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f5f7fa;
-      padding: 40px;
+      background-color: var(--bg);
+      color: var(--fg);
+      padding: 30px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      color: #333;
     }
 
     h2 {
-      color: #2c3e50;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 20px;
+    }
+
+    .toolbar input {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      min-width: 200px;
+    }
+
+    .toolbar button {
+      padding: 8px 16px;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 10px;
     }
 
     table {
       border-collapse: collapse;
-      width: 90%;
+      width: 100%;
       max-width: 1000px;
-      background-color: white;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      background-color: var(--table-bg);
       border-radius: 8px;
       overflow: hidden;
+      margin-top: 10px;
     }
 
     th, td {
-      padding: 14px 18px;
+      padding: 12px 16px;
       text-align: left;
+      border-bottom: 1px solid #ddd;
     }
 
     th {
-      background-color: #3498db;
-      color: white;
+      background-color: var(--header-bg);
+      color: var(--header-fg);
+      cursor: pointer;
     }
 
     tr:nth-child(even) {
-      background-color: #f2f2f2;
+      background-color: var(--row-alt);
     }
 
     tr:hover {
-      background-color: #e0f0ff;
+      background-color: var(--row-hover);
+    }
+
+    .pagination {
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 6px 12px;
+      margin: 0 4px;
+      background: var(--header-bg);
+      color: var(--header-fg);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     a.button {
-      display: inline-block;
       margin-top: 25px;
       padding: 10px 20px;
-      background-color: #2ecc71;
+      background-color: var(--accent);
       color: white;
       text-decoration: none;
       border-radius: 6px;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-    a.button:hover {
-      background-color: #27ae60;
-      transform: scale(1.05);
-    }
-
-    a.button:active {
-      transform: scale(0.98);
     }
   </style>
 </head>
@@ -72,22 +124,111 @@
 
   <h2>📄 Contents of <em>{{ table }}</em></h2>
 
-  <table>
-    <tr>
-      {% for col in colnames %}
-        <th>{{ col }}</th>
-      {% endfor %}
-    </tr>
-    {% for row in rows %}
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search...">
+    <div>
+      <button onclick="toggleDarkMode()">🌓 Toggle Dark Mode</button>
+      <button onclick="downloadCSV()">⬇ Download CSV</button>
+    </div>
+  </div>
+
+  <table id="data-table">
+    <thead>
       <tr>
-        {% for val in row %}
-          <td>{{ val }}</td>
+        {% for col in colnames %}
+          <th onclick="sortTable({{ loop.index0 }})">{{ col }}</th>
         {% endfor %}
       </tr>
-    {% endfor %}
+    </thead>
+    <tbody id="table-body">
+      {% for row in rows %}
+        <tr>
+          {% for val, colname in zip(row, colnames) %}
+            {% if table == "sessions" and colname == "url" %}
+              <td><a href="{{ val }}" target="_blank">{{ val }}</a></td>
+            {% else %}
+              <td>{{ val }}</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
   </table>
+
+  <div class="pagination" id="pagination"></div>
 
   <a class="button" href="/">⬅ Back to Tables</a>
 
+  <script>
+    // Dark mode
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+    }
+
+    // Search filter
+    document.getElementById("search").addEventListener("input", function () {
+      const filter = this.value.toLowerCase();
+      const rows = document.querySelectorAll("#table-body tr");
+      rows.forEach(row => {
+        row.style.display = Array.from(row.children).some(td =>
+          td.textContent.toLowerCase().includes(filter)
+        ) ? "" : "none";
+      });
+      updatePagination();
+    });
+
+    // Sorting
+    function sortTable(colIndex) {
+      const rows = Array.from(document.querySelectorAll("#table-body tr"));
+      const sorted = rows.sort((a, b) => {
+        const valA = a.children[colIndex].textContent.trim();
+        const valB = b.children[colIndex].textContent.trim();
+        return valA.localeCompare(valB, undefined, {numeric: true});
+      });
+      const tbody = document.getElementById("table-body");
+      tbody.innerHTML = "";
+      sorted.forEach(row => tbody.appendChild(row));
+      updatePagination();
+    }
+
+    // Pagination
+    let currentPage = 1;
+    const rowsPerPage = 10;
+
+    function updatePagination() {
+      const rows = Array.from(document.querySelectorAll("#table-body tr")).filter(r => r.style.display !== "none");
+      const totalPages = Math.ceil(rows.length / rowsPerPage);
+      const pagDiv = document.getElementById("pagination");
+      pagDiv.innerHTML = "";
+
+      rows.forEach((row, i) => {
+        row.style.display = (i >= (currentPage - 1) * rowsPerPage && i < currentPage * rowsPerPage) ? "" : "none";
+      });
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.innerText = i;
+        btn.onclick = () => {
+          currentPage = i;
+          updatePagination();
+        };
+        if (i === currentPage) btn.style.fontWeight = "bold";
+        pagDiv.appendChild(btn);
+      }
+    }
+
+    // CSV Download
+    function downloadCSV() {
+      const rows = Array.from(document.querySelectorAll("table tr"));
+      const csv = rows.map(row => Array.from(row.children).map(cell => `"${cell.innerText}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "{{ table }}.csv";
+      a.click();
+    }
+
+    window.onload = updatePagination;
+  </script>
 </body>
 </html>
