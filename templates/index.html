@@ -1,0 +1,7 @@
+<h2>Jupyter Lab Data</h2>
+{% for table in tables %}
+  <form method="GET" action="/view">
+    <input type="hidden" name="table" value="{{ table }}">
+    <button type="submit">{{ table }}</button>
+  </form><br>
+{% endfor %}

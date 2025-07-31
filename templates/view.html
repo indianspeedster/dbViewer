@@ -1,0 +1,16 @@
+<h2>Contents of {{ table }}</h2>
+<table border="1">
+  <tr>
+    {% for col in colnames %}
+      <th>{{ col }}</th>
+    {% endfor %}
+  </tr>
+  {% for row in rows %}
+    <tr>
+      {% for val in row %}
+        <td>{{ val }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+<br><a href="/">Back</a>
