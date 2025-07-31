@@ -140,19 +140,20 @@
         {% endfor %}
       </tr>
     </thead>
-    <tbody id="table-body">
-      {% for row in rows %}
-        <tr>
-          {% for val, colname in zip(row, colnames) %}
-            {% if table == "sessions" and colname == "url" %}
-              <td><a href="{{ val }}" target="_blank">{{ val }}</a></td>
-            {% else %}
-              <td>{{ val }}</td>
-            {% endif %}
-          {% endfor %}
-        </tr>
+<tbody id="table-body">
+  {% for row in zipped_rows %}
+    <tr>
+      {% for val, colname in row %}
+        {% if table == "sessions" and colname == "url" %}
+          <td><a href="{{ val }}" target="_blank">{{ val }}</a></td>
+        {% else %}
+          <td>{{ val }}</td>
+        {% endif %}
       {% endfor %}
-    </tbody>
+    </tr>
+  {% endfor %}
+</tbody>
+
   </table>
 
   <div class="pagination" id="pagination"></div>

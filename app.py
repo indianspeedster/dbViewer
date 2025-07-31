@@ -32,7 +32,11 @@ def view_table():
     colnames = [desc[0] for desc in cur.description]
     cur.close()
     conn.close()
-    return render_template('view.html', table=table, colnames=colnames, rows=rows)
+
+    # Zip rows with columns (a list of lists of (val, colname))
+    zipped_rows = [[(val, colnames[i]) for i, val in enumerate(row)] for row in rows]
+
+    return render_template('view.html', table=table, colnames=colnames, zipped_rows=zipped_rows)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
