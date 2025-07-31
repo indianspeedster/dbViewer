@@ -1,7 +1,68 @@
-<h2>Jupyter Lab Data</h2>
-{% for table in tables %}
-  <form method="GET" action="/view">
-    <input type="hidden" name="table" value="{{ table }}">
-    <button type="submit">{{ table }}</button>
-  </form><br>
-{% endfor %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jupyter Lab Data</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    form {
+      margin: 10px 0;
+    }
+
+    button {
+      background-color: #3498db;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      text-align: center;
+      font-size: 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      cursor: pointer;
+      min-width: 200px;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .form-wrapper {
+      width: 100%;
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📊 Jupyter Lab Data Tables</h2>
+
+  <div class="form-wrapper">
+    {% for table in tables %}
+      <form method="GET" action="/view">
+        <input type="hidden" name="table" value="{{ table }}">
+        <button type="submit">{{ table }}</button>
+      </form>
+    {% endfor %}
+  </div>
+
+</body>
+</html>
