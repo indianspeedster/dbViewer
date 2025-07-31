@@ -160,7 +160,7 @@
 
   <a class="button" href="/">⬅ Back to Tables</a>
 
-  <script>
+<script>
   let currentPage = 1;
   const rowsPerPage = 10;
 
@@ -180,17 +180,14 @@
     const pagDiv = document.getElementById("pagination");
     const allRows = Array.from(document.querySelectorAll("#table-body tr"));
     
-    // Hide all rows first
     allRows.forEach(row => row.style.display = "none");
 
-    // Show only visible rows for this page
     rows.forEach((row, i) => {
       if (i >= (currentPage - 1) * rowsPerPage && i < currentPage * rowsPerPage) {
         row.style.display = "";
       }
     });
 
-    // Render page buttons
     pagDiv.innerHTML = "";
     for (let i = 1; i <= totalPages; i++) {
       const btn = document.createElement("button");
@@ -223,8 +220,37 @@
     updatePagination();
   });
 
-  window.onload = updatePagination;
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+    localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+  }
+
+  function downloadCSV() {
+    const rows = getVisibleRows();  // filtered + sorted
+    const headers = Array.from(document.querySelectorAll("table thead th")).map(th => `"${th.innerText}"`);
+    const csvRows = [headers.join(",")];
+
+    rows.forEach(row => {
+      const values = Array.from(row.children).map(td => `"${td.innerText}"`);
+      csvRows.push(values.join(","));
+    });
+
+    const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = document.title.replace(/[^a-zA-Z0-9]/g, "_") + ".csv";
+    a.click();
+  }
+
+  // Restore dark mode on reload
+  window.onload = () => {
+    if (localStorage.getItem("darkMode") === "true") {
+      document.body.classList.add("dark");
+    }
+    updatePagination();
+  };
 </script>
+
 
 </body>
 </html>
