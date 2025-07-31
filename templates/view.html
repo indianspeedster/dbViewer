@@ -161,75 +161,70 @@
   <a class="button" href="/">⬅ Back to Tables</a>
 
   <script>
-    // Dark mode
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark");
-    }
+  let currentPage = 1;
+  const rowsPerPage = 10;
 
-    // Search filter
-    document.getElementById("search").addEventListener("input", function () {
-      const filter = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#table-body tr");
-      rows.forEach(row => {
-        row.style.display = Array.from(row.children).some(td =>
-          td.textContent.toLowerCase().includes(filter)
-        ) ? "" : "none";
-      });
-      updatePagination();
+  function getVisibleRows() {
+    const filter = document.getElementById("search").value.toLowerCase();
+    const allRows = Array.from(document.querySelectorAll("#table-body tr"));
+    return allRows.filter(row =>
+      Array.from(row.children).some(
+        td => td.textContent.toLowerCase().includes(filter)
+      )
+    );
+  }
+
+  function updatePagination() {
+    const rows = getVisibleRows();
+    const totalPages = Math.ceil(rows.length / rowsPerPage);
+    const pagDiv = document.getElementById("pagination");
+    const allRows = Array.from(document.querySelectorAll("#table-body tr"));
+    
+    // Hide all rows first
+    allRows.forEach(row => row.style.display = "none");
+
+    // Show only visible rows for this page
+    rows.forEach((row, i) => {
+      if (i >= (currentPage - 1) * rowsPerPage && i < currentPage * rowsPerPage) {
+        row.style.display = "";
+      }
     });
 
-    // Sorting
-    function sortTable(colIndex) {
-      const rows = Array.from(document.querySelectorAll("#table-body tr"));
-      const sorted = rows.sort((a, b) => {
-        const valA = a.children[colIndex].textContent.trim();
-        const valB = b.children[colIndex].textContent.trim();
-        return valA.localeCompare(valB, undefined, {numeric: true});
-      });
-      const tbody = document.getElementById("table-body");
-      tbody.innerHTML = "";
-      sorted.forEach(row => tbody.appendChild(row));
-      updatePagination();
+    // Render page buttons
+    pagDiv.innerHTML = "";
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement("button");
+      btn.innerText = i;
+      btn.onclick = () => {
+        currentPage = i;
+        updatePagination();
+      };
+      if (i === currentPage) btn.style.fontWeight = "bold";
+      pagDiv.appendChild(btn);
     }
+  }
 
-    // Pagination
-    let currentPage = 1;
-    const rowsPerPage = 10;
+  function sortTable(colIndex) {
+    const rows = Array.from(document.querySelectorAll("#table-body tr"));
+    rows.sort((a, b) => {
+      const valA = a.children[colIndex].textContent.trim();
+      const valB = b.children[colIndex].textContent.trim();
+      return valA.localeCompare(valB, undefined, { numeric: true });
+    });
+    const tbody = document.getElementById("table-body");
+    tbody.innerHTML = "";
+    rows.forEach(row => tbody.appendChild(row));
+    currentPage = 1;
+    updatePagination();
+  }
 
-    function updatePagination() {
-      const rows = Array.from(document.querySelectorAll("#table-body tr")).filter(r => r.style.display !== "none");
-      const totalPages = Math.ceil(rows.length / rowsPerPage);
-      const pagDiv = document.getElementById("pagination");
-      pagDiv.innerHTML = "";
+  document.getElementById("search").addEventListener("input", () => {
+    currentPage = 1;
+    updatePagination();
+  });
 
-      rows.forEach((row, i) => {
-        row.style.display = (i >= (currentPage - 1) * rowsPerPage && i < currentPage * rowsPerPage) ? "" : "none";
-      });
+  window.onload = updatePagination;
+</script>
 
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement("button");
-        btn.innerText = i;
-        btn.onclick = () => {
-          currentPage = i;
-          updatePagination();
-        };
-        if (i === currentPage) btn.style.fontWeight = "bold";
-        pagDiv.appendChild(btn);
-      }
-    }
-
-    // CSV Download
-    function downloadCSV() {
-      const rows = Array.from(document.querySelectorAll("table tr"));
-      const csv = rows.map(row => Array.from(row.children).map(cell => `"${cell.innerText}"`).join(",")).join("\n");
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "{{ table }}.csv";
-      a.click();
-    }
-
-    window.onload = updatePagination;
-  </script>
 </body>
 </html>
